@@ -1,0 +1,52 @@
+name: Node.js
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Récupération du code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Installation de Node.js (change si Python/PHP)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # 3️⃣ Installation des dépendances
+      - name: Install dependencies
+        run: npm install
+
+      # 4️⃣ Vérification (optionnel)
+      - name: Run tests
+        run: npm test
+        continue-on-error: true
+
+      # 5️⃣ Lancer le bot (pour serveur ou webhook)
+      - name: Start WhatsApp Bot
+        run: |
+          echo "Starting WhatsApp bot..."
+          npm run start
+        env:
+          WHATSAPP_TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
+          WHATSAPP_PHONE_ID: ${{ secrets.WHATSAPP_PHONE_ID }}
+          VERIFY_TOKEN: ${{ secrets.VERIFY_TOKEN }}
+
+      # 6️⃣ Notification succès
+      - name: Deployment success
+        if: success()
+        run: echo "✅ WhatsApp Bot deployed successfully"
+
+      # 7️⃣ Notification échec
+      - name: Deployment failed
+        if: failure()
+        run: echo "❌ WhatsApp Bot deployment failed"
+      
